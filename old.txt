@@ -1,0 +1,252 @@
+
+⏺ Explore(Explore iRouter project structure)
+  ⎿  Done (7 tool uses · 19.1k tokens · 20s)
+  (ctrl+o to expand)
+                                                                                        
+⏺ The project is in the planning/greenfield phase — only CLAUDE.md exists, no code yet.
+                                                     
+  Here's what's planned:                                                                                                                                                        
+                                         
+  ┌───────────────────┬──────────────────────────────────────────────┐                                                                                                          
+  │      Feature      │                 Description                  │
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Device View       │ Connected devices with IP, MAC, hostname     │                                                                                                          
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Firewall Rules    │ Manage router firewall configs               │                                                                                                          
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Parental Controls │ Device groups, schedules, site blocking      │                                                                                                          
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Router Control    │ Restart router                               │
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Settings          │ Router IP, credentials (allow non-cert HTTP) │
+  ├───────────────────┼──────────────────────────────────────────────┤                                                                                                          
+  │ Themes            │ Light/dark mode                              │
+  └───────────────────┴──────────────────────────────────────────────┘                                                                                                          
+                  
+  Stack: SwiftUI, iOS 17+, targeting OpenWRT/DD-WRT routers over local network HTTP.                                                                                            
+   
+  Ready to start scaffolding — want me to set up the Xcode project structure and initial SwiftUI views?                                                                         
+                  
+❯ yes                                                                                                                                                                           
+                  
+⏺ Let me scaffold the full project structure with Swift source files.                                                                                                           
+                                                                                                                                                                                
+  Listed 1 directory (ctrl+o to expand)           
+                                                                                                                                                                                
+⏺ Bash(mkdir -p /Users/uq/Downloads/DevWork/iRouter/iRouter/{Models,Views/{Devices,Firewall,ParentalControls,Settings,Components},Services,ViewModels})
+  ⎿  Done                                                                                                                                                                       
+                                                                                                                                                                                
+⏺ Now I'll create all the source files in parallel.                                                                                                                             
+                                                                                                                                                                                
+⏺ Write(iRouter/iRouterApp.swift)                                                                                                                                               
+  ⎿  Wrote 14 lines to iRouter/iRouterApp.swift                                                                                                                                 
+       1 import SwiftUI                                                                                                                                                         
+       2                                                                                                                                                                        
+       3 @main                                                                                                                                                                  
+       4 struct iRouterApp: App {                                                                                                                                               
+       5     @StateObject private var appViewModel = AppViewModel()                                                                                                             
+       6                                                                                                                                                                        
+       7     var body: some Scene {                                                                                                                                             
+       8         WindowGroup {                                                                                                                                                  
+       9             ContentView()                                                                                                                                              
+      10                 .environmentObject(appViewModel)                                                                                                                       
+     … +4 lines (ctrl+o to expand)                             
+                                                                                                                                                                                
+⏺ Write(iRouter/Models/RouterSettings.swift)                   
+  ⎿  Wrote 12 lines to iRouter/Models/RouterSettings.swift                                                                                                                      
+       1 import Foundation                                                                                                                                                    
+       2                                                                                                                                                                        
+       3 struct RouterSettings: Codable {                                                                                                                                       
+       4     var routerIP: String = "192.168.1.1"                                                                                                                               
+       5     var username: String = "admin"                                                                                                                                     
+       6     var useHTTPS: Bool = false                                                                                                                                         
+       7                                                                                                                                                                        
+       8     var baseURL: URL? {                                                                                                                                                
+       9         let scheme = useHTTPS ? "https" : "http"                                                                                                                       
+      10         return URL(string: "\(scheme)://\(routerIP)")                                                                                                                  
+     … +2 lines (ctrl+o to expand)                                                                                                                                              
+                                                                                                                                                                                
+⏺ Write(iRouter/Models/Device.swift)                                                                                                                                            
+  ⎿  Wrote 13 lines to iRouter/Models/Device.swift                                                                                                                              
+       1 import Foundation                                                                                                                                                      
+       2                                                                                                                                                                        
+       3 struct Device: Identifiable, Hashable, Codable {                                                                                                                       
+       4     var id: String { macAddress }                                                                                                                                      
+       5     var macAddress: String                                                                                                                                             
+       6     var ipAddress: String                                          
+       7     var hostname: String
+       8     var isBlocked: Bool = false                                                                                                                                        
+       9                  
+      10     var displayName: String {
+     … +3 lines (ctrl+o to expand)                                        
+
+⏺ Write(iRouter/Models/FirewallRule.swift)
+  ⎿  Wrote 12 lines to iRouter/Models/FirewallRule.swift      
+       1 import Foundation               
+       2 
+       3 struct FirewallRule: Identifiable, Codable {
+       4     var id: UUID = UUID()                                          
+       5     var name: String
+       6     var isEnabled: Bool                                                                                                                                                
+       7     var targetMACs: [String]  
+       8     var blockedDays: [Int]       // 0=Sun … 6=Sat
+       9     var startTime: DateComponents                                
+      10     var endTime: DateComponents
+     … +2 lines (ctrl+o to expand)
+                                                              
+⏺ Write(iRouter/Models/DeviceGroup.swift)
+  ⎿  Wrote 8 lines to iRouter/Models/DeviceGroup.swift
+      1 import Foundation                    
+      2                                                                     
+      3 struct DeviceGroup: Identifiable, Codable {
+      4     var id: UUID = UUID()                                                                                                                                               
+      5     var name: String           
+      6     var memberMACs: [String]
+      7     var rules: [FirewallRule]                                     
+      8 }
+                    
+⏺ Write(iRouter/Services/KeychainService.swift)               
+  ⎿  Wrote 41 lines to iRouter/Services/KeychainService.swift               
+       1 import Foundation     
+       2 import Security                                                                                                                                                        
+       3                      
+       4 enum KeychainService {                                                                                                                                                 
+       5     private static let service = "com.irouter.credentials"       
+       6                                                                                                                                                                        
+       7     static func savePassword(_ password: String, account: String) {                                                                                                  
+       8         let data = Data(password.utf8)                                                                                                                                 
+       9         let query: [CFString: Any] = [                                                                                                                                 
+      10             kSecClass: kSecClassGenericPassword,                                                                                                                       
+     … +31 lines (ctrl+o to expand)                                                                                                                                             
+                                                                                                                                                                                
+⏺ Write(iRouter/Services/RouterService.swift)                                                                                                                                   
+  ⎿  Wrote 168 lines to iRouter/Services/RouterService.swift                                                                                                                    
+       1 import Foundation                                                                                                                                                      
+       2                                                                                                                                                                        
+       3 enum RouterError: LocalizedError {                                                                                                                                     
+       4     case notConfigured                                                                                                                                                 
+       5     case unauthorized                                                                                                                                                
+       6     case networkError(Error)                                                                                                                                           
+       7     case parseError                                
+       8
+       9     var errorDescription: String? {
+      10         switch self {
+     … +158 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/ViewModels/AppViewModel.swift)
+  ⎿  Wrote 88 lines to iRouter/ViewModels/AppViewModel.swift                
+       1 import SwiftUI           
+       2 import Combine                                                                                                                                                         
+       3 
+       4 @MainActor                                                                                                                                                             
+       5 final class AppViewModel: ObservableObject {       
+       6     @Published var devices: [Device] = []                                                                                                                              
+       7     @Published var deviceGroups: [DeviceGroup] = []
+       8     @Published var firewallRules: [FirewallRule] = []
+       9     @Published var settings: RouterSettings = RouterSettings()
+      10     @Published var isLoading: Bool = false
+     … +78 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/Views/ContentView.swift)
+  ⎿  Wrote 29 lines to iRouter/Views/ContentView.swift                      
+      1 import SwiftUI            
+      2                                                                                                                                                                         
+      3 struct ContentView: View {
+      4     @EnvironmentObject var vm: AppViewModel                                                                                                                             
+      5                                                     
+      6     var body: some View {                                                                                                                                               
+      7         TabView {                                   
+      8             DevicesView()
+      9                 .tabItem { Label("Devices", systemImage: "network") }
+     … +19 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/Views/Devices/DevicesView.swift)
+  ⎿  Wrote 66 lines to iRouter/Views/Devices/DevicesView.swift              
+       1 import SwiftUI            
+       2                                                                                                                                                                        
+       3 struct DevicesView: View {
+       4     @EnvironmentObject var vm: AppViewModel                                                                                                                            
+       5                                                    
+       6     var body: some View {                                                                                                                                              
+       7         NavigationStack {                          
+       8             Group {
+       9                 if vm.isLoading && vm.devices.isEmpty {
+      10                     ProgressView("Loading devices…")
+     … +56 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/Views/Firewall/FirewallView.swift)
+  ⎿  Wrote 139 lines to iRouter/Views/Firewall/FirewallView.swift           
+       1 import SwiftUI            
+       2                                                                                                                                                                        
+       3 struct FirewallView: View {
+       4     @EnvironmentObject var vm: AppViewModel                                                                                                                            
+       5     @State private var showingAddRule = false      
+       6                                                                                                                                                                        
+       7     var body: some View {                          
+       8         NavigationStack {
+       9             Group {
+      10                 if vm.firewallRules.isEmpty {
+     … +129 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/Views/ParentalControls/ParentalControlsView.swift)
+  ⎿  Wrote 166 lines to iRouter/Views/ParentalControls/ParentalControlsView.swift
+       1 import SwiftUI            
+       2                                                                                                                                                                        
+       3 struct ParentalControlsView: View {
+       4     @EnvironmentObject var vm: AppViewModel                                                                                                                            
+       5     @State private var showingAddGroup = false     
+       6                                                                                                                                                                        
+       7     var body: some View {                          
+       8         NavigationStack {
+       9             Group {
+      10                 if vm.deviceGroups.isEmpty {
+     … +156 lines (ctrl+o to expand)
+
+⏺ Write(iRouter/Views/Settings/SettingsView.swift)
+  ⎿  Wrote 121 lines to iRouter/Views/Settings/SettingsView.swift           
+       1 import SwiftUI            
+       2                                                                                                                                                                        
+       3 struct SettingsView: View {
+       4     @EnvironmentObject var vm: AppViewModel                                                                                                                            
+       5                                                    
+       6     @State private var routerIP: String = ""                                                                                                                           
+       7     @State private var username: String = ""       
+       8     @State private var password: String = ""
+       9     @State private var useHTTPS: Bool = false
+      10     @State private var selectedScheme: AppColorScheme = .system
+     … +111 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)  
+                                                                            
+⏺ All 13 source files created. Here's what was scaffolded:
+                                                                                                                                                                                
+  iRouter/
+  ├── iRouterApp.swift            — @main entry point                                                                                                                           
+  ├── Models/                                               
+  │   ├── Device.swift            — MAC, IP, hostname                                                                                                                           
+  │   ├── DeviceGroup.swift       — named group of devices + rules                                                                                                              
+  │   ├── FirewallRule.swift      — schedule, MACs, blocked sites                                                                                                               
+  │   └── RouterSettings.swift   — IP, username, HTTP/S                                                                                                                         
+  ├── Services/                                                                                                                                                                 
+  │   ├── RouterService.swift     — async HTTP to DD-WRT (with TrustAllDelegate for non-cert)
+  │   └── KeychainService.swift  — secure password storage                                                                                                                      
+  ├── ViewModels/                                           
+  │   └── AppViewModel.swift      — single @EnvironmentObject, persists to UserDefaults                                                                                         
+  └── Views/                                                                                                                                                                    
+      ├── ContentView.swift        — 4-tab root
+      ├── Devices/DevicesView.swift                                                                                                                                             
+      ├── Firewall/FirewallView.swift                       
+      ├── ParentalControls/ParentalControlsView.swift                                                                                                                           
+      └── Settings/SettingsView.swift                                                                                                                                           
+   
+  To get running: Create a new Xcode project (iOS App, SwiftUI, iOS 17), delete the default ContentView.swift and App.swift, then drag the iRouter/ folder into the project     
+  navigator. Add NSLocalNetworkUsageDescription to Info.plist for local network access.
+                                                                                                                                                                                
+✻ Sautéed for 1m 50s                                        
+                                                                            
+※ recap: Scaffolded the full iRouter iOS app source with SwiftUI views, models, services, and networking for DD-WRT router management. Next: create the Xcode project and add   
+  the generated files to start building and testing. (disable recaps in /config)                                                                                                
+                                                                                                                                                                                
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯                                                                                                                                                                               
+────────────────────────────────────────────────────────────────────
