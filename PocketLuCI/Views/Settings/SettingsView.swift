@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("appColorScheme") private var preferredScheme: String = "system"
+    @AppStorage("appLockEnabled") private var appLockEnabled = false
     @State private var showPassword = false
 
     var body: some View {
@@ -122,6 +123,10 @@ struct SettingsView: View {
                 }
 
                 Section("Appearance") {
+                    Toggle(isOn: $appLockEnabled) {
+                        Label("Require Face ID / Passcode", systemImage: "faceid")
+                    }
+
                     Picker(selection: $preferredScheme) {
                         Text("System").tag("system")
                         Text("Light").tag("light")

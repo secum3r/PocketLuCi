@@ -113,15 +113,19 @@ final class ParentalControlsViewModel {
     private func unblockGroup(_ group: DeviceGroup) async {
         var updated = group
         error = nil
-        do {
-            for sid in group.blockRuleSectionIDs {
+        for sid in group.blockRuleSectionIDs {
+            do {
                 try await LuCIClient.shared.deleteRule(section: sid)
+            } catch {
+                // code 4 = section not found — already gone, treat as success
+                let msg = error.localizedDescription
+                if !msg.contains("code 4") {
+                    self.error = msg
+                }
             }
-            updated.isBlocked = false
-            updated.blockRuleSectionIDs = []
-        } catch {
-            self.error = error.localizedDescription
         }
+        updated.isBlocked = false
+        updated.blockRuleSectionIDs = []
         updateGroup(updated)
     }
 

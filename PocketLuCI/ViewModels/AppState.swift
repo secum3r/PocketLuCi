@@ -12,6 +12,11 @@ final class AppState {
     var connectionError: String?
     var selectedTab: Int = 0
 
+    var wasConnected: Bool {
+        get { defaults.bool(forKey: "wasConnected") }
+        set { defaults.set(newValue, forKey: "wasConnected") }
+    }
+
     private let defaults = UserDefaults.standard
 
     var rpcBaseURL: String {
@@ -44,6 +49,7 @@ final class AppState {
         do {
             try await LuCIClient.shared.authenticate(username: username, password: password)
             isConnected = true
+            wasConnected = true
         } catch {
             isConnected = false
             connectionError = error.localizedDescription
@@ -52,6 +58,7 @@ final class AppState {
     }
 
     func disconnect() {
+        wasConnected = false
         isConnected = false
         LuCIClient.shared.invalidateSession()
         LuCIClient.shared.configure(host: "", useHTTPS: false)
